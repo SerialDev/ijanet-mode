@@ -13,12 +13,14 @@
 
 
 ;;; Commentary:
-;; 
+;;
 
 
 (defun regex-match ( regex-string string-search match-num )
   (string-match regex-string string-search)
   (match-string match-num string-search))
+
+
 
 
 (defcustom ijanet-shell-buffer-name "*Ijanet*"
@@ -91,15 +93,24 @@ This is a simple wrapper around the built-in `split-string'."
   (regex-match "^[[:space:]]*" data 0))
 
 
+
 (defun ijanet-eval-region (begin end)
   "Evaluate region between BEGIN and END."
   (interactive "r")
   (ijanet t)
   (progn
-    (maintain-indentation (ijanet-split "\n"
-				      (buffer-substring-no-properties begin end)) 0)
-    (comint-send-string ijanet-shell-buffer-name ";\n")
-  ))
+    (let ((content (ijanet-split "\n" (buffer-substring-no-properties begin end)) ))
+
+      (print (buffer-substring-no-properties (region-beginning) (region-end)))
+      (print content)
+      (print (buffer-substring-no-properties begin end))
+      (maintain-indentation content  0)
+  )
+    (comint-send-string ijanet-shell-buffer-name "\n")))
+
+
+
+
 
 
 ;; (defun ijanet-type-check ()
@@ -231,6 +242,15 @@ See `comint-prompt-read-only' for details."
   (ansi-color-filter-apply output))
 
 
+(defun ijanet-eval-sexp-at-point()
+  (interactive)
+  (let ((sexp (sexp-at-point) ))
+    (when sexp
+    (comint-send-string ijanet-shell-buffer-name     (message "%s" sexp))
+    )
+    (comint-send-string ijanet-shell-buffer-name "\n")
+  ))
+
 
 (define-derived-mode inferior-ijanet-mode comint-mode "Ijanet"
   (setq comint-process-echoes t)
@@ -252,6 +272,7 @@ See `comint-prompt-read-only' for details."
 ;;   (define-key janet-mode-map (kbd "C-c C-r") #'ijanet-eval-region)
 ;;   (define-key janet-mode-map (kbd "C-c C-l") #'ijanet-eval-line)
 ;;   (define-key janet-mode-map (kbd "C-c C-p") #'ijanet))
+
 
 
 
