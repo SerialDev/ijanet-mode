@@ -246,7 +246,7 @@ See `comint-prompt-read-only' for details."
   (interactive)
   (let ((sexp (sexp-at-point) ))
     (when sexp
-    (comint-send-string ijanet-shell-buffer-name     (message "%s" sexp))
+    (comint-send-string ijanet-shell-buffer-name     (message "%S" sexp))
     )
     (comint-send-string ijanet-shell-buffer-name "\n")
   ))
