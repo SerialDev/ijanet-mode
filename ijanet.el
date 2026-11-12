@@ -4,7 +4,7 @@
 
 ;; Author: Andres Mariscal <carlos.mariscal.melgar@gmail.com>
 ;; Created: 17 May 2019
-;; Version: 0.0.1
+;; Version: 0.0.2
 ;; Keywords: janet languages repl
 ;; URL: https://github.com/serialdev/ijanet-mode
 ;; Package-Requires: ((emacs "24.3", parsec ))
@@ -12,11 +12,9 @@
 ;; Janet Repl support
 
 
-;;; Commentary:
+;;; Code:
 ;;
-
-
-(defun regex-match ( regex-string string-search match-num )
+(defun ijanet-regex-match ( regex-string string-search match-num )
   (string-match regex-string string-search)
   (match-string match-num string-search))
 
@@ -62,7 +60,7 @@ Unless ARG is non-nil, switch to the buffer."
 
 (defun ijanet-startup ()
   "Start ijanet."
-(apply 'make-comint-in-buffer "janet" ijanet-shell-buffer-name ijanet-program nil (list "-s")))
+  (apply 'make-comint-in-buffer "janet" ijanet-shell-buffer-name ijanet-program nil (list "-s")))
 
 
 
@@ -74,9 +72,9 @@ Unless ARG is non-nil, switch to the buffer."
 	    (comint-send-string ijanet-shell-buffer-name "\n")
 	    (comint-send-string ijanet-shell-buffer-name (car current))
 	    (comint-send-string ijanet-shell-buffer-name "\n"))
-      (progn
-	(comint-send-string ijanet-shell-buffer-name (car current))
-	(comint-send-string ijanet-shell-buffer-name "\n")))
+        (progn
+	  (comint-send-string ijanet-shell-buffer-name (car current))
+	  (comint-send-string ijanet-shell-buffer-name "\n")))
       (maintain-indentation (cdr current) current-indent)
       )))
 
@@ -90,7 +88,7 @@ This is a simple wrapper around the built-in `split-string'."
 
 
 (defun ijanet-match-indentation(data)
-  (regex-match "^[[:space:]]*" data 0))
+  (ijanet-regex-match "^[[:space:]]*" data 0))
 
 
 
@@ -105,7 +103,7 @@ This is a simple wrapper around the built-in `split-string'."
       (print content)
       (print (buffer-substring-no-properties begin end))
       (maintain-indentation content  0)
-  )
+      )
     (comint-send-string ijanet-shell-buffer-name "\n")))
 
 
@@ -238,18 +236,20 @@ See `comint-prompt-read-only' for details."
 
 (defun ijanet-comint-output-filter-function (output)
   "Hook run after content is put into comint buffer.
-   OUTPUT is a string with the contents of the buffer"
+OUTPUT is a string with the contents of the buffer"
   (ansi-color-filter-apply output))
 
 
-(defun ijanet-eval-sexp-at-point()
+(defun ijanet-eval-sexp-at-point ()
+  "Send current s-expression to janet process."
   (interactive)
-  (let ((sexp (sexp-at-point) ))
-    (when sexp
-    (comint-send-string ijanet-shell-buffer-name     (message "%s" sexp))
-    )
-    (comint-send-string ijanet-shell-buffer-name "\n")
-  ))
+  (let* ((bounds (bounds-of-thing-at-point 'sexp))
+         ;;(sexp (sexp-at-point))
+         (sexp-str (buffer-substring (car bounds) (cdr bounds))))
+    (when sexp-str
+      (message "%s" sexp-str)
+      (comint-send-string ijanet-shell-buffer-name sexp-str))
+    (comint-send-string ijanet-shell-buffer-name "\n")))
 
 
 (define-derived-mode inferior-ijanet-mode comint-mode "Ijanet"
@@ -272,6 +272,7 @@ See `comint-prompt-read-only' for details."
 ;;   (define-key janet-mode-map (kbd "C-c C-r") #'ijanet-eval-region)
 ;;   (define-key janet-mode-map (kbd "C-c C-l") #'ijanet-eval-line)
 ;;   (define-key janet-mode-map (kbd "C-c C-p") #'ijanet))
+;;   (define-key janet-mode-map (kbd "C-c C-e") #'ijanet-eval-sexp-at-point)
 
 
 
